@@ -1,4 +1,5 @@
 import { DestinationData } from "../models/destination"; // Assure-toi que le chemin est correct
+import { RoadData } from "../models/roads";
 
 const API_URL = 'https://ticket-to-ride-api-rest-node-js.onrender.com/api';
 
@@ -37,7 +38,7 @@ export default class TicketToRideService {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            const result: ApiResponse<any[]> = await response.json();
+            const result: ApiResponse<RoadData[]> = await response.json();
             return result.data;
         } catch (error) {
             if (error instanceof Error) {
