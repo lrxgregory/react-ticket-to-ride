@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SelectList from './selectList';
-import TicketToRideService from '../services/ticketToRideService';
-import { DestinationData } from '../models/destination';
+import useDestinationsRoads from '../hooks/useDestinationsRoads';
 import trainStations from '../models/trainstation';
 import { MultiValue, SingleValue } from 'react-select';
 
@@ -15,73 +14,88 @@ interface OptionType {
     label: string;
 }
 
+interface PreviousSelection {
+    selected: SingleValue<OptionType> | MultiValue<OptionType>;
+}
+
 const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     const [cards, setCards] = useState<string[]>(Array(playerNumber).fill(''));
-    const [destinations, setDestinations] = useState<OptionType[]>();
-    const [longDestinations, setLongDestinations] = useState<OptionType[]>();
-    const [roads, setRoads] = useState<OptionType[]>();
     const [scores, setScores] = useState<number[]>(Array(playerNumber).fill(0));
+    const [previousSelections, setPreviousSelections] = useState<{ [key: string]: PreviousSelection }[]>(Array(playerNumber).fill({}));
+    const { destinations, longDestinations, roads } = useDestinationsRoads(selectedMap);
 
     useEffect(() => {
-        setCards((prevCards) => {
-            if (playerNumber > prevCards.length) {
-                return [...prevCards, ...Array(playerNumber - prevCards.length).fill('')];
-            } else {
-                return prevCards.slice(0, playerNumber);
-            }
-        });
+        setCards(prevCards => (
+            playerNumber > prevCards.length
+                ? [...prevCards, ...Array(playerNumber - prevCards.length).fill('')]
+                : prevCards.slice(0, playerNumber)
+        ));
 
         setScores(Array(playerNumber).fill(0));
+        setPreviousSelections(Array(playerNumber).fill({}));
     }, [playerNumber]);
 
-    // const handleCardChange = (index: number, newValue: string) => {
-    //     setCards((prevCards) => {
-    //         const updatedCards = [...prevCards];
-    //         updatedCards[index] = newValue;
-    //         return updatedCards;
-    //     });
-    // };
-
-    const setOptions = (data: DestinationData[]): OptionType[] => {
-        return data.map(item => ({
-            value: item.score,
-            label: `${item.start} ⇔ ${item.end} (score ${item.score})`
-        }));
-    };
-
-    useEffect(() => {
-        TicketToRideService.getDestinations().then(data => {
-            const longDestinationsData = data.filter((destination) => destination.isLongDestination && destination.map === selectedMap);
-            const destinationsData = data.filter((destination) => !destination.isLongDestination && destination.map === selectedMap);
-
-            const longDestinations = setOptions(longDestinationsData);
-            const destinations = setOptions(destinationsData);
-
-            setDestinations(destinations);
-            setLongDestinations(longDestinations);
-        }).catch(error => {
-            console.error('Erreur lors de la récupération des destinations:', error);
-        });
-
-        TicketToRideService.getRoads().then(data => {
-            const roadsData = data.filter((road) => road.map === selectedMap);
-
-            const roads = setOptions(roadsData);
-
-            setRoads(roads);
-        }).catch(error => {
-            console.error('Erreur lors de la récupération des destinations:', error);
-        });
-    }, [selectedMap]);
-
-    // Fonction pour extraire les valeurs sélectionnées
-    const extractSelectedValues = (selected: SingleValue<OptionType> | MultiValue<OptionType>): number[] => {
-        return Array.isArray(selected)
+    const extractSelectedValues = (selected: SingleValue<OptionType> | MultiValue<OptionType>): number[] => (
+        Array.isArray(selected)
             ? selected.map(option => option.value)
-            : selected ? [(selected as OptionType).value] : [];
+            : selected ? [(selected as OptionType).value] : []
+    );
+
+    const handleSelectChange = (index: number) => (
+        selected: SingleValue<OptionType> | MultiValue<OptionType>,
+        name?: string,
+        checked?: boolean
+    ) => {
+
+        if (typeof name !== 'string') return;
+
+        const selectedValues = extractSelectedValues(selected);
+
+        if (name === 'longDestination') {
+            // Calculer le score pour longDestination en fonction de `checked`
+            const scoreLongDestination = selectedValues.reduce((sum, value) => sum + value, 0);
+
+            setScores(prevScores => {
+                const updatedScores = [...prevScores];
+                updatedScores[index] += checked ? -scoreLongDestination : scoreLongDestination;
+                return updatedScores;
+            });
+        } else {
+            // Mettre à jour les scores pour d'autres types
+            setScores(prevScores => {
+                const updatedScores = [...prevScores];
+                const previousSelection = previousSelections[index][name] as PreviousSelection;
+
+                if (previousSelection) {
+                    const oldValues = extractSelectedValues(previousSelection.selected);
+                    const newValues = selectedValues;
+                    const addedValues = newValues.filter(value => !oldValues.includes(value));
+                    const removedValues = oldValues.filter(value => !newValues.includes(value));
+
+                    const previousScoreRemoved = calculateScore(removedValues, name);
+                    const previousScoreAdded = calculateScore(addedValues, name);
+
+                    updatedScores[index] -= previousScoreRemoved;
+                    updatedScores[index] += previousScoreAdded;
+                } else {
+                    const newScore = calculateScore(selectedValues, name);
+                    updatedScores[index] += newScore;
+                }
+
+                return updatedScores;
+            });
+        }
+
+        setPreviousSelections(prevSelections => {
+            const updatedSelections = [...prevSelections];
+            updatedSelections[index] = {
+                ...updatedSelections[index],
+                [name]: { selected }
+            };
+            return updatedSelections;
+        });
     };
 
-    // Fonction pour calculer le score en fonction des sélections
     const calculateScore = (values: number[], name?: string): number => {
         let score = 0;
         switch (name) {
@@ -95,7 +109,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                 score = values.reduce((sum, value) => sum - value, 0);
                 break;
             case 'trainStations':
-                score = values.reduce((sum, value) => sum - (value * 4), 0); // Chaque station coûtant 4 points
+                score = values.reduce((sum, value) => sum - (value * 4), 0);
                 break;
             case 'roads':
                 score = values.reduce((sum, value) => sum + value, 0);
@@ -105,21 +119,6 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                 break;
         }
         return score;
-    };
-
-    // Fonction principale pour gérer les changements de sélection
-    const handleSelectChange = (index: number) => (
-        selected: SingleValue<OptionType> | MultiValue<OptionType>,
-        name?: string
-    ) => {
-        const selectedValues = extractSelectedValues(selected);
-        const newScore = calculateScore(selectedValues, name);
-
-        setScores((prevScores) => {
-            const updatedScores = Array.isArray(prevScores) ? [...prevScores] : Array(playerNumber).fill(0);
-            updatedScores[index] = updatedScores[index] + newScore;
-            return updatedScores;
-        });
     };
 
     return (

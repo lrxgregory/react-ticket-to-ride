@@ -12,7 +12,7 @@ interface SelectListProps {
     defaultOption: string;
     selectMultiple?: boolean;
     options?: OptionType[];
-    onChange?: (selected: SingleValue<OptionType> | MultiValue<OptionType>, name?: string) => void;
+    onChange?: (selected: SingleValue<OptionType> | MultiValue<OptionType>, name?: string, checked?: boolean) => void;
     name?: string;
 }
 
@@ -27,6 +27,7 @@ const SelectList: React.FC<SelectListProps> = ({
         selectMultiple ? [] : null
     );
     const [isValueSelected, setIsValueSelected] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
 
     useEffect(() => {
         if (selectMultiple) {
@@ -39,7 +40,14 @@ const SelectList: React.FC<SelectListProps> = ({
     const handleChange = (selected: SingleValue<OptionType> | MultiValue<OptionType>) => {
         setSelectedOption(selected);
         if (onChange) {
-            onChange(selected, name);
+            onChange(selected, name, isChecked);
+        }
+    };
+
+    const handleCheckBox = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setIsChecked(event.target.checked);
+        if (onChange) {
+            onChange(selectedOption, name, event.target.checked);
         }
     };
 
@@ -70,7 +78,7 @@ const SelectList: React.FC<SelectListProps> = ({
                     {isValueSelected && name === 'longDestination' && (
                         <div>
                             <label>
-                                <input type="checkbox" />
+                                <input type="checkbox" checked={isChecked} onChange={handleCheckBox} />
                                 Check if the destination has not been completed :(
                             </label>
                         </div>
