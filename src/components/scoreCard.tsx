@@ -26,18 +26,17 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
         ));
     }, [playerNumber]);
 
-    const getFilteredOptions = (name: string, index: number, options: OptionType[]) => {
+    const getFilteredOptions = (index: number, options: OptionType[]) => {
         const selectedValues = Object.values(previousSelections[index])
             .flatMap(selection => {
                 if (Array.isArray(selection.selected)) {
-                    return selection.selected.map(opt => opt.value);
-                } else if (selection.selected && 'value' in selection.selected) {
-                    return [selection.selected.value];
+                    return selection.selected.map(opt => opt.label);
+                } else if (selection.selected && 'label' in selection.selected) {
+                    return [selection.selected.label];
                 }
                 return [];
             });
-
-        return options.filter(option => !selectedValues.includes(option.value));
+        return options.filter(option => !selectedValues.includes(option.label));
     };
 
     return (
@@ -49,7 +48,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <h2 className="text-lg font-semibold mb-2">Player {index + 1}</h2>
                         <SelectList
                             defaultOption={'a long destination'}
-                            options={getFilteredOptions('longDestination', index, longDestinations)}
+                            options={getFilteredOptions(index, longDestinations)}
                             name={'longDestination'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.longDestination?.selected || null}
@@ -57,7 +56,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'destinations completed'}
                             selectMultiple={true}
-                            options={getFilteredOptions('destinationCompleted', index, destinations)}
+                            options={getFilteredOptions(index, destinations)}
                             name={'destinationCompleted'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.destinationCompleted?.selected || []}
@@ -65,7 +64,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'destinations failed'}
                             selectMultiple={true}
-                            options={getFilteredOptions('destinationFailed', index, destinations)}
+                            options={getFilteredOptions(index, destinations)}
                             name={'destinationFailed'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.destinationFailed?.selected || []}
@@ -73,7 +72,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'roads taken'}
                             selectMultiple={true}
-                            options={getFilteredOptions('roads', index, roads)}
+                            options={getFilteredOptions(index, roads)}
                             name={'roads'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.roads?.selected || []}
@@ -81,7 +80,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         {selectedMap === 'Europe' && (
                             <SelectList
                                 defaultOption={'the number of train stations used'}
-                                options={getFilteredOptions('trainStations', index, trainStations)}
+                                options={trainStations}
                                 name={'trainStations'}
                                 onChange={handleSelectChange(index)}
                                 value={previousSelections[index]?.trainStations?.selected || null}
