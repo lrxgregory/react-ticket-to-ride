@@ -14,11 +14,14 @@ const useScoreManager = (playerNumber: number) => {
     const [scores, setScores] = useState<number[]>(Array(playerNumber).fill(0));
     const [previousSelections, setPreviousSelections] = useState<{ [key: string]: PreviousSelection }[]>(Array(playerNumber).fill({}));
 
-    const extractSelectedValues = (selected: SingleValue<OptionType> | MultiValue<OptionType>): number[] => (
-        Array.isArray(selected)
-            ? selected.map(option => option.value)
-            : selected ? [(selected as OptionType).value] : []
-    );
+    const extractSelectedValues = (selected: SingleValue<OptionType> | MultiValue<OptionType>): number[] => {
+        if (Array.isArray(selected)) {
+            return selected.map(option => option.value);
+        } else if (selected && 'value' in selected) {
+            return [selected.value];
+        }
+        return [];
+    };
 
     const calculateScore = (values: number[], name?: string): number => {
         let score = 0;
@@ -54,38 +57,28 @@ const useScoreManager = (playerNumber: number) => {
 
         const selectedValues = extractSelectedValues(selected);
 
-        if (name === 'longDestination') {
-            const scoreLongDestination = selectedValues.reduce((sum, value) => sum + value, 0);
+        setScores(prevScores => {
+            const updatedScores = [...prevScores];
+            const previousSelection = previousSelections[index][name] as PreviousSelection;
 
-            setScores(prevScores => {
-                const updatedScores = [...prevScores];
+            if (name === 'longDestination') {
+                const scoreLongDestination = selectedValues.reduce((sum, value) => sum + value, 0);
                 updatedScores[index] += checked ? -scoreLongDestination : scoreLongDestination;
-                return updatedScores;
-            });
-        } else {
-            setScores(prevScores => {
-                const updatedScores = [...prevScores];
-                const previousSelection = previousSelections[index][name] as PreviousSelection;
-
+            } else {
                 if (previousSelection) {
                     const oldValues = extractSelectedValues(previousSelection.selected);
-                    const newValues = selectedValues;
-                    const addedValues = newValues.filter(value => !oldValues.includes(value));
-                    const removedValues = oldValues.filter(value => !newValues.includes(value));
+                    const removedValues = oldValues.filter(value => !selectedValues.includes(value));
+                    const addedValues = selectedValues.filter(value => !oldValues.includes(value));
 
-                    const previousScoreRemoved = calculateScore(removedValues, name);
-                    const previousScoreAdded = calculateScore(addedValues, name);
-
-                    updatedScores[index] -= previousScoreRemoved;
-                    updatedScores[index] += previousScoreAdded;
+                    updatedScores[index] -= calculateScore(removedValues, name);
+                    updatedScores[index] += calculateScore(addedValues, name);
                 } else {
-                    const newScore = calculateScore(selectedValues, name);
-                    updatedScores[index] += newScore;
+                    updatedScores[index] += calculateScore(selectedValues, name);
                 }
+            }
 
-                return updatedScores;
-            });
-        }
+            return updatedScores;
+        });
 
         setPreviousSelections(prevSelections => {
             const updatedSelections = [...prevSelections];
@@ -101,8 +94,6 @@ const useScoreManager = (playerNumber: number) => {
         scores,
         previousSelections,
         handleSelectChange,
-        setScores,
-        setPreviousSelections,
     };
 };
 

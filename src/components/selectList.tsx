@@ -14,6 +14,7 @@ interface SelectListProps {
     options?: OptionType[];
     onChange?: (selected: SingleValue<OptionType> | MultiValue<OptionType>, name?: string, checked?: boolean) => void;
     name?: string;
+    value?: SingleValue<OptionType> | MultiValue<OptionType>;
 }
 
 const SelectList: React.FC<SelectListProps> = ({
@@ -21,21 +22,17 @@ const SelectList: React.FC<SelectListProps> = ({
     selectMultiple = false,
     options = [],
     onChange,
-    name
+    name,
+    value
 }) => {
     const [selectedOption, setSelectedOption] = useState<SingleValue<OptionType> | MultiValue<OptionType>>(
-        selectMultiple ? [] : null
+        value || (selectMultiple ? [] : null)
     );
-    const [isValueSelected, setIsValueSelected] = useState(false);
     const [isChecked, setIsChecked] = useState(false);
 
     useEffect(() => {
-        if (selectMultiple) {
-            setIsValueSelected(Array.isArray(selectedOption) && selectedOption.length > 0);
-        } else {
-            setIsValueSelected(selectedOption !== null);
-        }
-    }, [selectedOption, selectMultiple]);
+        setSelectedOption(value || (selectMultiple ? [] : null));
+    }, [value, selectMultiple]);
 
     const handleChange = (selected: SingleValue<OptionType> | MultiValue<OptionType>) => {
         setSelectedOption(selected);
@@ -51,22 +48,22 @@ const SelectList: React.FC<SelectListProps> = ({
         }
     };
 
+    const isValueSelected = selectMultiple
+        ? Array.isArray(selectedOption) && selectedOption.length > 0
+        : selectedOption !== null;
+
     return (
         <div className="p-4">
             {selectMultiple ? (
-                // Rendu pour sélection multiple
-                <>
-                    <Select
-                        name={name}
-                        value={selectedOption as MultiValue<OptionType>}
-                        onChange={handleChange}
-                        options={options}
-                        isMulti
-                        placeholder={`Select ${defaultOption}`}
-                    />
-                </>
+                <Select
+                    name={name}
+                    value={selectedOption as MultiValue<OptionType>}
+                    onChange={handleChange}
+                    options={options}
+                    isMulti
+                    placeholder={`Select ${defaultOption}`}
+                />
             ) : (
-                // Rendu pour sélection unique
                 <>
                     <Select
                         name={name}
