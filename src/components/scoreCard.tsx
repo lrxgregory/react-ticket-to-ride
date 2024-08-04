@@ -16,6 +16,8 @@ interface OptionType {
 
 const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     const [cards, setCards] = useState<string[]>(Array(playerNumber).fill(''));
+    const [playerNames, setPlayerNames] = useState<string[]>(Array(playerNumber).fill(''));
+
     const { destinations, longDestinations, roads } = useDestinationsRoads(selectedMap);
     const { scores, handleSelectChange, previousSelections, handleCheckboxChange, resetSelections } = useScoreManager(playerNumber);
 
@@ -25,7 +27,18 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                 ? [...prevCards, ...Array(playerNumber - prevCards.length).fill('')]
                 : prevCards.slice(0, playerNumber)
         ));
+        setPlayerNames(prevNames => (
+            playerNumber > prevNames.length
+                ? [...prevNames, ...Array(playerNumber - prevNames.length).fill(`Player ${prevNames.length + 1}`)]
+                : prevNames.slice(0, playerNumber)
+        ));
     }, [playerNumber]);
+
+    const handlePlayerNameChange = (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newNames = [...playerNames];
+        newNames[index] = event.target.value;
+        setPlayerNames(newNames);
+    };
 
     // Collect all selected values from all players
     const getAllSelectedValues = () => {
@@ -57,7 +70,12 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
             <div className="flex flex-wrap justify-between gap-4">
                 {cards.map((content, index) => (
                     <div key={index} className="flex-1 min-w-[150px] border p-4 bg-white rounded-md shadow-sm">
-                        <h2 className="text-lg font-semibold mb-2">Player {index + 1}</h2>
+                        <input
+                            type="text"
+                            onChange={handlePlayerNameChange(index)}
+                            className="text-lg font-semibold mb-2 border-b-2 border-gray-200 focus:outline-none focus:border-gray-300 text-center"
+                            placeholder={`Player ${index + 1}`}
+                        />
                         <SelectList
                             defaultOption={'a long destination'}
                             options={getFilteredOptions(longDestinations)}
