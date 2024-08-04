@@ -3,6 +3,7 @@ import SelectList from './selectList';
 import useDestinationsRoads from '../hooks/useDestinationsRoads';
 import trainStations from '../models/trainstation';
 import useScoreManager from '../hooks/useScoreManager';
+
 interface ScoreCardProps {
     selectedMap: string;
     playerNumber: number;
@@ -26,17 +27,24 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
         ));
     }, [playerNumber]);
 
-    const getFilteredOptions = (index: number, options: OptionType[]) => {
-        const selectedValues = Object.values(previousSelections[index])
-            .flatMap(selection => {
-                if (Array.isArray(selection.selected)) {
-                    return selection.selected.map(opt => opt.label);
-                } else if (selection.selected && 'label' in selection.selected) {
-                    return [selection.selected.label];
+    // Collect all selected values from all players
+    const getAllSelectedValues = () => {
+        return Object.values(previousSelections).flatMap(selection =>
+            Object.values(selection).flatMap(item => {
+                if (Array.isArray(item.selected)) {
+                    return item.selected.map(opt => opt.label);
+                } else if (item.selected && 'label' in item.selected) {
+                    return [item.selected.label];
                 }
                 return [];
-            });
-        return options.filter(option => !selectedValues.includes(option.label));
+            })
+        );
+    };
+
+    // Get the filtered options based on global selections
+    const getFilteredOptions = (options: OptionType[]) => {
+        const allSelectedValues = getAllSelectedValues();
+        return options.filter(option => !allSelectedValues.includes(option.label));
     };
 
     return (
@@ -48,7 +56,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <h2 className="text-lg font-semibold mb-2">Player {index + 1}</h2>
                         <SelectList
                             defaultOption={'a long destination'}
-                            options={getFilteredOptions(index, longDestinations)}
+                            options={getFilteredOptions(longDestinations)}
                             name={'longDestination'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.longDestination?.selected || null}
@@ -57,7 +65,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'destinations completed'}
                             selectMultiple={true}
-                            options={getFilteredOptions(index, destinations)}
+                            options={getFilteredOptions(destinations)}
                             name={'destinationCompleted'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.destinationCompleted?.selected || []}
@@ -65,7 +73,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'destinations failed'}
                             selectMultiple={true}
-                            options={getFilteredOptions(index, destinations)}
+                            options={getFilteredOptions(destinations)}
                             name={'destinationFailed'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.destinationFailed?.selected || []}
@@ -73,7 +81,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <SelectList
                             defaultOption={'roads taken'}
                             selectMultiple={true}
-                            options={getFilteredOptions(index, roads)}
+                            options={getFilteredOptions(roads)}
                             name={'roads'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.roads?.selected || []}
