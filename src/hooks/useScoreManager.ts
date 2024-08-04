@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { SingleValue, MultiValue } from 'react-select';
+import ScoreCard from '../components/scoreCard';
 
 interface OptionType {
     value: number;
@@ -102,11 +103,17 @@ const useScoreManager = (playerNumber: number) => {
         });
     };
 
+    const resetSelections = useCallback(() => {
+        setPreviousSelections(Array(playerNumber).fill({}));
+        setScores(Array(playerNumber).fill(0));
+    }, [playerNumber]);
+
     return {
         scores,
         previousSelections,
         handleSelectChange,
-        handleCheckboxChange
+        handleCheckboxChange,
+        resetSelections
     };
 };
 

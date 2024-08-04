@@ -17,7 +17,7 @@ interface OptionType {
 const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     const [cards, setCards] = useState<string[]>(Array(playerNumber).fill(''));
     const { destinations, longDestinations, roads } = useDestinationsRoads(selectedMap);
-    const { scores, handleSelectChange, previousSelections, handleCheckboxChange } = useScoreManager(playerNumber);
+    const { scores, handleSelectChange, previousSelections, handleCheckboxChange, resetSelections } = useScoreManager(playerNumber);
 
     useEffect(() => {
         setCards(prevCards => (
@@ -40,6 +40,10 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
             })
         );
     };
+
+    useEffect(() => {
+        resetSelections();
+    }, [selectedMap, resetSelections]);
 
     // Get the filtered options based on global selections
     const getFilteredOptions = (options: OptionType[]) => {
