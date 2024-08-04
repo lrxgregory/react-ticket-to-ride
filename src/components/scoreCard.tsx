@@ -67,15 +67,18 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     return (
         <div className="w-full mx-auto p-4">
             <h1 className="text-center text-2xl font-bold mb-4">Score Cards for {selectedMap}</h1>
-            <div className="flex flex-wrap justify-between gap-4">
+            <div className="flex flex-wrap gap-4">
                 {cards.map((content, index) => (
                     <div key={index} className="flex-1 min-w-[150px] border p-4 bg-white rounded-md shadow-sm">
-                        <input
-                            type="text"
-                            onChange={handlePlayerNameChange(index)}
-                            className="text-lg font-semibold mb-2 border-b-2 border-gray-200 focus:outline-none focus:border-gray-300 text-center"
-                            placeholder={`Player ${index + 1}`}
-                        />
+                        <div className="flex items-center p-4">
+                            <input
+                                type="text"
+                                value={playerNames[index]}
+                                onChange={handlePlayerNameChange(index)}
+                                className="text-lg font-semibold border-b-2 border-gray-200 focus:outline-none focus:border-gray-300 text-center flex-grow"
+                                placeholder={`Player ${index + 1}`}
+                            />
+                        </div>
                         <SelectList
                             defaultOption={'a long destination'}
                             options={getFilteredOptions(longDestinations)}
@@ -121,7 +124,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                     </div>
                 ))}
             </div>
-        </div>
+        </div >
     );
 };
 
