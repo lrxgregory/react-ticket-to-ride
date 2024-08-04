@@ -61,21 +61,19 @@ const useScoreManager = (playerNumber: number) => {
             const updatedScores = [...prevScores];
             const previousSelection = previousSelections[index][name] as PreviousSelection;
 
-            if (name === 'longDestination') {
-                const scoreLongDestination = selectedValues.reduce((sum, value) => sum + value, 0);
-                updatedScores[index] += checked ? -scoreLongDestination : scoreLongDestination;
-            } else {
-                if (previousSelection) {
-                    const oldValues = extractSelectedValues(previousSelection.selected);
-                    const removedValues = oldValues.filter(value => !selectedValues.includes(value));
-                    const addedValues = selectedValues.filter(value => !oldValues.includes(value));
 
+            if (previousSelection) {
+                const oldValues = extractSelectedValues(previousSelection.selected);
+                const removedValues = oldValues.filter(value => !selectedValues.includes(value));
+                const addedValues = selectedValues.filter(value => !oldValues.includes(value));
+                if (!checked) {
                     updatedScores[index] -= calculateScore(removedValues, name);
-                    updatedScores[index] += calculateScore(addedValues, name);
-                } else {
-                    updatedScores[index] += calculateScore(selectedValues, name);
                 }
+                updatedScores[index] += calculateScore(addedValues, name);
+            } else {
+                updatedScores[index] += calculateScore(selectedValues, name);
             }
+
 
             return updatedScores;
         });
@@ -90,10 +88,25 @@ const useScoreManager = (playerNumber: number) => {
         });
     };
 
+    const handleCheckboxChange = (index: number) => (
+        selected: SingleValue<OptionType> | MultiValue<OptionType>,
+        checked?: boolean
+    ) => {
+        const selectedValues = extractSelectedValues(selected);
+        console.log(selectedValues);
+        setScores(prevScores => {
+            const updatedScores = [...prevScores];
+            const scoreLongDestination = selectedValues.reduce((sum, value) => sum + value, 0);
+            updatedScores[index] += checked ? -scoreLongDestination : scoreLongDestination;
+            return updatedScores;
+        });
+    };
+
     return {
         scores,
         previousSelections,
         handleSelectChange,
+        handleCheckboxChange
     };
 };
 

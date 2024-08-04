@@ -16,7 +16,7 @@ interface OptionType {
 const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     const [cards, setCards] = useState<string[]>(Array(playerNumber).fill(''));
     const { destinations, longDestinations, roads } = useDestinationsRoads(selectedMap);
-    const { scores, handleSelectChange, previousSelections } = useScoreManager(playerNumber);
+    const { scores, handleSelectChange, previousSelections, handleCheckboxChange } = useScoreManager(playerNumber);
 
     useEffect(() => {
         setCards(prevCards => (
@@ -52,6 +52,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                             name={'longDestination'}
                             onChange={handleSelectChange(index)}
                             value={previousSelections[index]?.longDestination?.selected || null}
+                            onChecked={handleCheckboxChange(index)}
                         />
                         <SelectList
                             defaultOption={'destinations completed'}

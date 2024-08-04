@@ -15,6 +15,7 @@ interface SelectListProps {
     onChange?: (selected: SingleValue<OptionType> | MultiValue<OptionType>, name?: string, checked?: boolean) => void;
     name?: string;
     value?: SingleValue<OptionType> | MultiValue<OptionType>;
+    onChecked?: (selected: SingleValue<OptionType> | MultiValue<OptionType>, checked?: boolean) => void;
 }
 
 const SelectList: React.FC<SelectListProps> = ({
@@ -23,16 +24,24 @@ const SelectList: React.FC<SelectListProps> = ({
     options = [],
     onChange,
     name,
-    value
+    value,
+    onChecked
 }) => {
     const [selectedOption, setSelectedOption] = useState<SingleValue<OptionType> | MultiValue<OptionType>>(
         value || (selectMultiple ? [] : null)
     );
-    const [isChecked, setIsChecked] = useState(false);
+    const [isChecked, setIsChecked] = useState<boolean>(false);
 
     useEffect(() => {
         setSelectedOption(value || (selectMultiple ? [] : null));
     }, [value, selectMultiple]);
+
+    useEffect(() => {
+        // Synchronize `isChecked` with the initial value passed to the component
+        if (name === 'longDestination') {
+            setIsChecked(false);
+        }
+    }, [name]);
 
     const handleChange = (selected: SingleValue<OptionType> | MultiValue<OptionType>) => {
         setSelectedOption(selected);
@@ -42,9 +51,10 @@ const SelectList: React.FC<SelectListProps> = ({
     };
 
     const handleCheckBox = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setIsChecked(event.target.checked);
-        if (onChange) {
-            onChange(selectedOption, name, event.target.checked);
+        const checked = event.target.checked;
+        setIsChecked(checked);
+        if (onChecked) {
+            onChecked(selectedOption, checked);
         }
     };
 
