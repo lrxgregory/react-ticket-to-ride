@@ -73,7 +73,6 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                         <div className="flex items-center p-4">
                             <input
                                 type="text"
-                                value={playerNames[index]}
                                 onChange={handlePlayerNameChange(index)}
                                 className="text-lg font-semibold border-b-2 border-gray-200 focus:outline-none focus:border-gray-300 text-center flex-grow"
                                 placeholder={`Player ${index + 1}`}
