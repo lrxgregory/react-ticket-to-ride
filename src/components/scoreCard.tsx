@@ -19,7 +19,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
     const [playerNames, setPlayerNames] = useState<string[]>(Array(playerNumber).fill(''));
 
     const { destinations, longDestinations, roads } = useDestinationsRoads(selectedMap);
-    const { scores, handleSelectChange, previousSelections, handleCheckboxChange, resetSelections } = useScoreManager(playerNumber);
+    const { scores, handleSelectChange, previousSelections, handleCheckboxChange, resetSelections, handleLongestRoad, longestRoadIndex } = useScoreManager(playerNumber);
 
     useEffect(() => {
         setCards(prevCards => (
@@ -119,11 +119,21 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
                                 value={previousSelections[index]?.trainStations?.selected || null}
                             />
                         )}
+                        <div>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={longestRoadIndex === index}
+                                    onChange={(event) => handleLongestRoad(index)(event.target.checked)}
+                                />
+                                Check if you have the longest road
+                            </label>
+                        </div>
                         <p className="p-4">Score: {scores[index]}</p>
                     </div>
                 ))}
             </div>
-        </div >
+        </div>
     );
 };
 

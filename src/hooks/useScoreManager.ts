@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { SingleValue, MultiValue } from 'react-select';
-import ScoreCard from '../components/scoreCard';
 
 interface OptionType {
     value: number;
@@ -14,6 +13,7 @@ interface PreviousSelection {
 const useScoreManager = (playerNumber: number) => {
     const [scores, setScores] = useState<number[]>(Array(playerNumber).fill(0));
     const [previousSelections, setPreviousSelections] = useState<{ [key: string]: PreviousSelection }[]>(Array(playerNumber).fill({}));
+    const [longestRoadIndex, setLongestRoadIndex] = useState<number | null>(null);
 
     const extractSelectedValues = (selected: SingleValue<OptionType> | MultiValue<OptionType>): number[] => {
         if (Array.isArray(selected)) {
@@ -62,7 +62,6 @@ const useScoreManager = (playerNumber: number) => {
             const updatedScores = [...prevScores];
             const previousSelection = previousSelections[index][name] as PreviousSelection;
 
-
             if (previousSelection) {
                 const oldValues = extractSelectedValues(previousSelection.selected);
                 const removedValues = oldValues.filter(value => !selectedValues.includes(value));
@@ -74,7 +73,6 @@ const useScoreManager = (playerNumber: number) => {
             } else {
                 updatedScores[index] += calculateScore(selectedValues, name);
             }
-
 
             return updatedScores;
         });
@@ -103,9 +101,26 @@ const useScoreManager = (playerNumber: number) => {
         });
     };
 
+    const handleLongestRoad = (index: number) => (checked: boolean) => {
+        setScores(prevScores => {
+            const updatedScores = [...prevScores];
+            if (longestRoadIndex !== null) {
+                updatedScores[longestRoadIndex] -= 10; // Remove 10 points from the previous player
+            }
+            if (checked) {
+                updatedScores[index] += 10; // Add 10 points to the current player
+                setLongestRoadIndex(index); // Update the longestRoadIndex
+            } else {
+                setLongestRoadIndex(null); // Reset the longestRoadIndex
+            }
+            return updatedScores;
+        });
+    };
+
     const resetSelections = useCallback(() => {
         setPreviousSelections(Array(playerNumber).fill({}));
         setScores(Array(playerNumber).fill(0));
+        setLongestRoadIndex(null);
     }, [playerNumber]);
 
     return {
@@ -113,7 +128,9 @@ const useScoreManager = (playerNumber: number) => {
         previousSelections,
         handleSelectChange,
         handleCheckboxChange,
-        resetSelections
+        resetSelections,
+        handleLongestRoad,
+        longestRoadIndex
     };
 };
 
