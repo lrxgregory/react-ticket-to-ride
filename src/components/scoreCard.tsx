@@ -69,7 +69,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ selectedMap, playerNumber }) => {
             <h1 className="text-center text-2xl font-bold mb-4">Score Cards for {selectedMap}</h1>
             <div className="flex flex-wrap gap-4">
                 {cards.map((content, index) => (
-                    <div key={index} className="flex-1 min-w-[100px] border p-4 bg-white rounded-md shadow-sm">
+                    <div key={index} className="flex-1 min-w-full md:min-w-[200px] border p-4 bg-white rounded-md shadow-sm">
                         <div className="flex items-center p-4">
                             <input
                                 type="text"
